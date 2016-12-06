@@ -10,11 +10,18 @@ import scr.SensorModel;
 
 public class DefaultDriver extends AbstractDriver {
 
-    private NeuralNetwork neuralNetwork;
+    private NeuralNetwork neuralNetworkDad;
+    private NeuralNetwork neuralNetworkMom;
+    private NeuralNetwork neuralNetworkChild1;
 
     public DefaultDriver() {
         initialize();
-        neuralNetwork = new NeuralNetwork("W1_alldata2.csv", "W2_alldata2.csv", 22, 100, 3);
+        neuralNetworkDad = new NeuralNetwork("W1_alldata2.csv", "W2_alldata2.csv", 22, 100, 3);
+        neuralNetworkMom = new NeuralNetwork("w1_alldata1.csv", "W2_alldata1.csv", 22, 100, 3);
+        neuralNetworkChild1 = NeuralNetwork.makeChildSGA(neuralNetworkDad, neuralNetworkMom);
+        System.out.println(neuralNetworkMom);
+        System.out.println(neuralNetworkDad);
+        System.out.println(neuralNetworkChild1);
 //        neuralNetwork = neuralNetwork.loadGenome();
     }
 
@@ -38,7 +45,7 @@ public class DefaultDriver extends AbstractDriver {
     public double getAcceleration(SensorModel sensors) {
         double[] sensorArray = new double[4];
         try {
-            double output = neuralNetwork.getOutput(sensors);
+            double output = neuralNetworkChild1.getOutput(sensors);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -48,7 +55,7 @@ public class DefaultDriver extends AbstractDriver {
     @Override
     public double getSteering(SensorModel sensors) {
         try {
-            Double output = neuralNetwork.getOutput(sensors);
+            Double output = neuralNetworkChild1.getOutput(sensors);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -85,7 +92,7 @@ public class DefaultDriver extends AbstractDriver {
         }
         double[] outputs = new double[3];
         try {
-            outputs = neuralNetwork.feedForward(sensors);
+            outputs = neuralNetworkChild1.feedForward(sensors);
         } catch (Exception e) {
             e.printStackTrace();
         }

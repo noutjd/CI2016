@@ -33,10 +33,10 @@ public class DefaultDriverAlgorithm extends AbstractAlgorithm {
             results = race.runRace(drivers, true);
 
             // Save genome/nn
-            DriversUtils.storeGenome(drivers[0]);
+            //DriversUtils.storeGenome(drivers[0]);
         }
         // create a checkpoint this allows you to continue this run later
-        DriversUtils.createCheckpoint(this);
+        //DriversUtils.createCheckpoint(this);
         //DriversUtils.clearCheckpoint();
     }
 
@@ -54,9 +54,7 @@ public class DefaultDriverAlgorithm extends AbstractAlgorithm {
 		 *
 		 */
         DefaultDriverAlgorithm algorithm = new DefaultDriverAlgorithm();
-        NeuralNetwork testnet2 = new NeuralNetwork("W1_alldata2.csv", "W2_alldata2.csv", 22, 100, 3);
-        System.out.println(testnet2);
-        System.out.println(System.getProperty("user.dir"));
+        //System.out.println(System.getProperty("user.dir"));
         DriversUtils.registerMemory(algorithm.getDriverClass());
         if (args.length > 0 && args[0].equals("-show")) {
             new DefaultRace().showBest();

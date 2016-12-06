@@ -3,6 +3,8 @@ import scr.SensorModel;
 import java.io.*;
 import java.util.Arrays;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 public class NeuralNetwork implements Serializable {
 
     //FIELDS
@@ -75,6 +77,82 @@ public class NeuralNetwork implements Serializable {
 
     public double getOutput(SensorModel a) {
         return 0.5;
+    }
+
+    //uniform crossover, does not work well.
+    public static NeuralNetwork makeChild(NeuralNetwork mom, NeuralNetwork dad) {
+        double x;
+        if(mom.inputs == dad.inputs && mom.hidden == dad.hidden && mom.outputs == dad.outputs) {
+            NeuralNetwork child = new NeuralNetwork(mom.inputs, mom.hidden ,mom.outputs);
+            for(int i = 0; i < child.firstLayer.length; i ++) {
+                for(int j = 0; j < child.firstLayer[i].length; j ++) {
+                    x = Math.random();
+                    if(x < 0.5) {
+                        child.firstLayer[i][j] = mom.firstLayer[i][j];
+                    } else {
+                        child.firstLayer[i][j] = dad.firstLayer[i][j];
+                    }
+                }
+            }
+            for(int i = 0; i < child.secondLayer.length; i ++) {
+                for(int j = 0; j < child.secondLayer[i].length; j ++) {
+                    x = Math.random();
+                    if(x < 0.5) {
+                        child.secondLayer[i][j] = mom.secondLayer[i][j];
+                    } else {
+                        child.secondLayer[i][j] = dad.secondLayer[i][j];
+                    }
+                }
+            }
+            return child;
+        } else {
+            System.out.println("Parent dimensions do not agree!");
+            return null;
+        }
+    }
+
+    public static NeuralNetwork makeChildSGA(NeuralNetwork mom, NeuralNetwork dad) {
+        if(mom.inputs == dad.inputs && mom.hidden == dad.hidden && mom.outputs == dad.outputs) {
+            NeuralNetwork child = new NeuralNetwork(mom.inputs, mom.hidden ,mom.outputs);
+            boolean momFirst = Math.random() < 0.5;
+            int cutOffPoint1 = ThreadLocalRandom.current().nextInt(0, mom.hidden);
+            if(momFirst) {
+                for (int i = 0; i < cutOffPoint1; i++) {
+                    child.firstLayer[i] = mom.firstLayer[i].clone();
+                }
+                for (int i = cutOffPoint1; i < mom.hidden; i++) {
+                    child.firstLayer[i] = dad.firstLayer[i].clone();
+                }
+            } else {
+                for (int i = 0; i < cutOffPoint1; i++) {
+                    child.firstLayer[i] = dad.firstLayer[i].clone();
+                }
+                for (int i = cutOffPoint1; i < mom.hidden; i++) {
+                    child.firstLayer[i] = mom.firstLayer[i].clone();
+                }
+            }
+            momFirst = Math.random() < 0.5;
+            int cutOffPoint2 = ThreadLocalRandom.current().nextInt(0, mom.outputs);
+            if(momFirst) {
+                for (int i = 0; i < cutOffPoint2; i++) {
+                    child.secondLayer[i] = mom.secondLayer[i].clone();
+                }
+                for (int i = cutOffPoint2; i < mom.outputs; i++) {
+                    child.secondLayer[i] = dad.secondLayer[i].clone();
+                }
+            } else {
+                for (int i = 0; i < cutOffPoint2; i++) {
+                    child.secondLayer[i] = dad.secondLayer[i].clone();
+                }
+                for (int i = cutOffPoint2; i < mom.outputs; i++) {
+                    child.secondLayer[i] = mom.secondLayer[i].clone();
+                }
+            }
+            return child;
+        } else {
+            System.out.println("Parent dimensions do not agree!");
+            return null;
+        }
     }
 
     public double[] feedForward(SensorModel a) throws Exception {

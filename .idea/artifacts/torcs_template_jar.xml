@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="torcs_template:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/torcs_template_jar</output-path>
+    <root id="archive" name="torcs_template.jar">
+      <element id="module-output" name="torcs_template" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/cicontest.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

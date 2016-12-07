@@ -8,6 +8,11 @@ import cicontest.torcs.genome.IGenome;
 import scr.Action;
 import scr.SensorModel;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
 public class DefaultDriver extends AbstractDriver {
 
     private NeuralNetwork neuralNetworkDad;
@@ -16,12 +21,13 @@ public class DefaultDriver extends AbstractDriver {
 
     public DefaultDriver() {
         initialize();
-        neuralNetworkDad = new NeuralNetwork("W1_alldata2.csv", "W2_alldata2.csv", 22, 100, 3);
-        neuralNetwork = new NeuralNetwork("W1_alldata1.csv", "W2_alldata1.csv", 22, 100, 3);
+        //neuralNetwork = new NeuralNetwork("W1_alldata2.csv", "W2_alldata2.csv", 22, 100, 3);
+        //neuralNetwork = new NeuralNetwork("W1_alldata1.csv", "W2_alldata1.csv", 22, 100, 3);
         //neuralNetwork = NeuralNetwork.makeChildSGA(neuralNetworkDad, neuralNetworkMom);
-        neuralNetwork = new NeuralNetwork("W1_reallyalldata16.csv", "W2_reallyalldata16.csv", 22, 100, 3);
-        System.out.println(neuralNetworkMom);
-        System.out.println(neuralNetworkDad);
+        //neuralNetwork = new NeuralNetwork("W1_reallyalldata16.csv", "W2_reallyalldata16.csv", 22, 100, 3);
+        //System.out.println(neuralNetworkMom);
+        //System.out.println(neuralNetworkDad);
+        neuralNetwork = new NeuralNetwork("W16_tracks.csv", "W26_tracks.csv", 22, 100, 3);
         System.out.println(neuralNetwork);
 //        neuralNetwork = neuralNetwork.loadGenome();
     }
@@ -112,11 +118,17 @@ public class DefaultDriver extends AbstractDriver {
         action.brake = outputs[1];
         action.steering = 2 * outputs[2] - 1;
 
-        double[] trackEdgeSensors = sensors.getTrackEdgeSensors();
-        if(trackEdgeSensors[1] < 1.5) action.steering = action.steering - 0.15;
-        if(trackEdgeSensors[17] < 1.5) action.steering = action.steering + 0.15;
+        action.steering = action.steering + 0.3 * DriversUtils.alignToTrackAxis(sensors, 2);
 
-        action.steering = action.steering + 0.3 * DriversUtils.alignToTrackAxis(sensors, 0.5);
+        double[] trackEdgeSensors = sensors.getTrackEdgeSensors();
+        if(trackEdgeSensors[1] < 1) {
+            action.steering = -0.2;
+            action.brake = action.brake + 0.5;
+        }
+        if(trackEdgeSensors[17] < 1) {
+            action.steering = 0.2;
+            action.brake = action.brake + 0.5;
+        }
 
 /*        action.steering = DriversUtils.alignToTrackAxis(sensors, 0.5);
         if (sensors.getSpeed() > 60.0D) {
@@ -150,7 +162,7 @@ public class DefaultDriver extends AbstractDriver {
             System.out.println(wheelSpeeds[i]);
         }
         System.out.println(currSpeed);
-        */
+
         double maxLatSpeed = 0;
         double latSpeed = sensors.getLateralSpeed();
         if(latSpeed > maxLatSpeed) {
@@ -158,6 +170,29 @@ public class DefaultDriver extends AbstractDriver {
         }
         System.out.println(latSpeed);
         System.out.println(maxLatSpeed);
+        */
+        System.out.println(trackEdgeSensors[0]);
+        System.out.println(trackEdgeSensors[18]);
+
+        String s = "" + action.accelerate + ", " + action.brake + ", " + action.steering + ", " + sensors.getSpeed()
+                + ", " + sensors.getTrackPosition() + ", " + sensors.getAngleToTrackAxis();
+        double[] track_edge_senors = sensors.getTrackEdgeSensors();
+        for(int i = 0; i < track_edge_senors.length; i++) {
+            s += ", " + track_edge_senors[i];
+        }
+        s += "\n";
+        //System.out.println(s);
+        File outFile = new File("klad.csv");
+        try {
+            outFile.createNewFile();
+            FileWriter fstreamWrite = null;
+            fstreamWrite = new FileWriter("klad.csv", true);
+            BufferedWriter out = new BufferedWriter(fstreamWrite);
+            out.write(s);
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return action;
     }
 }

@@ -15,21 +15,14 @@ import java.io.IOException;
 
 public class DefaultDriver extends AbstractDriver {
 
-    private NeuralNetwork neuralNetworkDad;
-    private NeuralNetwork neuralNetworkMom;
     private NeuralNetwork neuralNetwork;
 
-    public DefaultDriver() {
+    public DefaultDriver(NeuralNetwork inputNetwork) {
         initialize();
-        //neuralNetwork = new NeuralNetwork("W1_alldata2.csv", "W2_alldata2.csv", 22, 100, 3);
-        //neuralNetwork = new NeuralNetwork("W1_alldata1.csv", "W2_alldata1.csv", 22, 100, 3);
-        //neuralNetwork = NeuralNetwork.makeChildSGA(neuralNetworkDad, neuralNetworkMom);
-        //neuralNetwork = new NeuralNetwork("W1_reallyalldata16.csv", "W2_reallyalldata16.csv", 22, 100, 3);
-        //System.out.println(neuralNetworkMom);
-        //System.out.println(neuralNetworkDad);
-        neuralNetwork = new NeuralNetwork("W16_tracks.csv", "W26_tracks.csv", 22, 100, 3);
+        this.neuralNetwork = inputNetwork;
+        //NeuralNetwork newNetwork = new NeuralNetwork("W1_alldata2.csv", "W2_alldata2.csv", 22, 100, 3);
+        //this.neuralNetwork = newNetwork;
         System.out.println(neuralNetwork);
-//        neuralNetwork = neuralNetwork.loadGenome();
     }
 
     private void initialize() {
@@ -123,56 +116,16 @@ public class DefaultDriver extends AbstractDriver {
         double[] trackEdgeSensors = sensors.getTrackEdgeSensors();
         if(trackEdgeSensors[1] < 1) {
             action.steering = -0.2;
-            action.brake = action.brake + 0.5;
         }
         if(trackEdgeSensors[17] < 1) {
             action.steering = 0.2;
-            action.brake = action.brake + 0.5;
         }
 
-/*        action.steering = DriversUtils.alignToTrackAxis(sensors, 0.5);
-        if (sensors.getSpeed() > 60.0D) {
-            action.accelerate = 0.0D;
-            action.brake = 0.0D;
-        }
-
-        if (sensors.getSpeed() > 70.0D) {
-            action.accelerate = 0.0D;
-            action.brake = -1.0D;
-        }
-
-        if (sensors.getSpeed() <= 60.0D) {
-            action.accelerate = (80.0D - sensors.getSpeed()) / 80.0D;
-            action.brake = 0.0D;
-        }
-
-        if (sensors.getSpeed() < 30.0D) {
-            action.accelerate = 1.0D;
-            action.brake = 0.0D;
-        }*/
         System.out.println("--------------" + getDriverName() + "--------------");
         System.out.println("Steering: " + action.steering);
         System.out.println("Acceleration: " + action.accelerate);
         System.out.println("Brake: " + action.brake);
         System.out.println("-----------------------------------------------");
-        /*
-        double[] wheelSpeeds = sensors.getWheelSpinVelocity();
-        double currSpeed = sensors.getSpeed();
-        for(int i = 0; i < wheelSpeeds.length; i ++) {
-            System.out.println(wheelSpeeds[i]);
-        }
-        System.out.println(currSpeed);
-
-        double maxLatSpeed = 0;
-        double latSpeed = sensors.getLateralSpeed();
-        if(latSpeed > maxLatSpeed) {
-            maxLatSpeed = latSpeed;
-        }
-        System.out.println(latSpeed);
-        System.out.println(maxLatSpeed);
-        */
-        System.out.println(trackEdgeSensors[0]);
-        System.out.println(trackEdgeSensors[18]);
 
         String s = "" + action.accelerate + ", " + action.brake + ", " + action.steering + ", " + sensors.getSpeed()
                 + ", " + sensors.getTrackPosition() + ", " + sensors.getAngleToTrackAxis();

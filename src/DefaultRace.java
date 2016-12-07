@@ -8,8 +8,7 @@ public class DefaultRace extends AbstractRace {
 	public int[] runQualification(DefaultDriverGenome[] drivers, boolean withGUI){
 		DefaultDriver[] driversList = new DefaultDriver[drivers.length + 1 ];
 		for(int i=0; i<drivers.length; i++){
-			driversList[i] = new DefaultDriver();
-			driversList[i].loadGenome(drivers[i]);
+			driversList[i] = drivers[i].defaultDriver;
 		}
 		return runQualification(driversList, withGUI);
 	}
@@ -19,14 +18,13 @@ public class DefaultRace extends AbstractRace {
 		int size = Math.min(10, drivers.length);
 		DefaultDriver[] driversList = new DefaultDriver[size];
 		for(int i=0; i<size; i++){
-			driversList[i] = new DefaultDriver();
-			driversList[i].loadGenome(drivers[i]);
+			driversList[i] = drivers[i].defaultDriver;
 		}
 		return runRace(driversList, withGUI, true);
 	}
 
 	
-	
+	/*
 	public void showBest(){
 		if(DriversUtils.getStoredGenome() == null ){
 			System.err.println("No best-genome known");
@@ -77,4 +75,5 @@ public class DefaultRace extends AbstractRace {
 		driversList[0] = new Human();
 		runRace(driversList, true, true);
 	}
+	*/
 }

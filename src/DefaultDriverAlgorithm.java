@@ -11,8 +11,8 @@ public class DefaultDriverAlgorithm extends AbstractAlgorithm {
 
     private static final long serialVersionUID = 654963126362653L;
 
-    DefaultDriverGenome[] drivers = new DefaultDriverGenome[1];
-    int[] results = new int[1];
+    DefaultDriverGenome[] drivers = new DefaultDriverGenome[2];
+    int[] results = new int[2];
 
     public Class<? extends Driver> getDriverClass() {
         return DefaultDriver.class;
@@ -21,8 +21,13 @@ public class DefaultDriverAlgorithm extends AbstractAlgorithm {
     public void run(boolean continue_from_checkpoint) {
         if (!continue_from_checkpoint) {
             //init NN
-            DefaultDriverGenome genome = new DefaultDriverGenome();
-            drivers[0] = genome;
+            NeuralNetwork inputNetwork1 = new NeuralNetwork("W1_alldata2.csv", "W2_alldata2.csv", 22, 100, 3);
+            DefaultDriverGenome genome1 = new DefaultDriverGenome(inputNetwork1);
+            drivers[0] = genome1;
+
+            NeuralNetwork inputNetwork2 = new NeuralNetwork("W1_alldata1.csv", "W2_alldata1.csv", 22, 100, 3);
+            DefaultDriverGenome genome2 = new DefaultDriverGenome(inputNetwork2);
+            drivers[1] = genome2;
 
             //Start a race
             DefaultRace race = new DefaultRace();
@@ -56,6 +61,7 @@ public class DefaultDriverAlgorithm extends AbstractAlgorithm {
         DefaultDriverAlgorithm algorithm = new DefaultDriverAlgorithm();
         //System.out.println(System.getProperty("user.dir"));
         DriversUtils.registerMemory(algorithm.getDriverClass());
+        /*
         if (args.length > 0 && args[0].equals("-show")) {
             new DefaultRace().showBest();
         } else if (args.length > 0 && args[0].equals("-show-race")) {
@@ -72,6 +78,8 @@ public class DefaultDriverAlgorithm extends AbstractAlgorithm {
             algorithm.run();
 
         }
+        */
+        algorithm.run();
     }
 
 }

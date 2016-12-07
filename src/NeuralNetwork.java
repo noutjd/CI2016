@@ -155,6 +155,26 @@ public class NeuralNetwork implements Serializable {
         }
     }
 
+    public static NeuralNetwork makeChildAverage(NeuralNetwork mom, NeuralNetwork dad) {
+        if(mom.inputs == dad.inputs && mom.hidden == dad.hidden && mom.outputs == dad.outputs) {
+            NeuralNetwork child = new NeuralNetwork(mom.inputs, mom.hidden ,mom.outputs);
+            for(int i = 0; i < child.firstLayer.length; i ++) {
+                for(int j = 0; j < child.firstLayer[i].length; j ++) {
+                    child.firstLayer[i][j] = 0.5 * (mom.firstLayer[i][j] + dad.firstLayer[i][j]);
+                }
+            }
+            for(int i = 0; i < child.secondLayer.length; i ++) {
+                for(int j = 0; j < child.secondLayer[i].length; j ++) {
+                    child.secondLayer[i][j] = 0.5 * (mom.secondLayer[i][j] + dad.secondLayer[i][j]);
+                }
+            }
+            return child;
+        } else {
+            System.out.println("Parent dimensions do not agree!");
+            return null;
+        }
+    }
+
     public double[] feedForward(SensorModel a) throws Exception {
         double[] input_layer = new double[this.inputs + 1];
         input_layer[0] = 1;

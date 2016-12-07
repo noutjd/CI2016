@@ -12,16 +12,17 @@ public class DefaultDriver extends AbstractDriver {
 
     private NeuralNetwork neuralNetworkDad;
     private NeuralNetwork neuralNetworkMom;
-    private NeuralNetwork neuralNetworkChild1;
+    private NeuralNetwork neuralNetwork;
 
     public DefaultDriver() {
         initialize();
         neuralNetworkDad = new NeuralNetwork("W1_alldata2.csv", "W2_alldata2.csv", 22, 100, 3);
-        neuralNetworkMom = new NeuralNetwork("w1_alldata1.csv", "W2_alldata1.csv", 22, 100, 3);
-        neuralNetworkChild1 = NeuralNetwork.makeChildSGA(neuralNetworkDad, neuralNetworkMom);
+        neuralNetwork = new NeuralNetwork("W1_alldata1.csv", "W2_alldata1.csv", 22, 100, 3);
+        //neuralNetwork = NeuralNetwork.makeChildSGA(neuralNetworkDad, neuralNetworkMom);
+        neuralNetwork = new NeuralNetwork("W1_reallyalldata16.csv", "W2_reallyalldata16.csv", 22, 100, 3);
         System.out.println(neuralNetworkMom);
         System.out.println(neuralNetworkDad);
-        System.out.println(neuralNetworkChild1);
+        System.out.println(neuralNetwork);
 //        neuralNetwork = neuralNetwork.loadGenome();
     }
 
@@ -45,7 +46,7 @@ public class DefaultDriver extends AbstractDriver {
     public double getAcceleration(SensorModel sensors) {
         double[] sensorArray = new double[4];
         try {
-            double output = neuralNetworkChild1.getOutput(sensors);
+            double output = neuralNetwork.getOutput(sensors);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -55,7 +56,7 @@ public class DefaultDriver extends AbstractDriver {
     @Override
     public double getSteering(SensorModel sensors) {
         try {
-            Double output = neuralNetworkChild1.getOutput(sensors);
+            Double output = neuralNetwork.getOutput(sensors);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -92,7 +93,7 @@ public class DefaultDriver extends AbstractDriver {
         }
         double[] outputs = new double[3];
         try {
-            outputs = neuralNetworkChild1.feedForward(sensors);
+            outputs = neuralNetwork.feedForward(sensors);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -112,8 +113,8 @@ public class DefaultDriver extends AbstractDriver {
         action.steering = 2 * outputs[2] - 1;
 
         double[] trackEdgeSensors = sensors.getTrackEdgeSensors();
-        if(trackEdgeSensors[0] < 1) action.steering = action.steering - 0.1;
-        if(trackEdgeSensors[18] < 1) action.steering = action.steering + 0.1;
+        if(trackEdgeSensors[1] < 1.5) action.steering = action.steering - 0.15;
+        if(trackEdgeSensors[17] < 1.5) action.steering = action.steering + 0.15;
 
         action.steering = action.steering + 0.3 * DriversUtils.alignToTrackAxis(sensors, 0.5);
 
@@ -142,6 +143,21 @@ public class DefaultDriver extends AbstractDriver {
         System.out.println("Acceleration: " + action.accelerate);
         System.out.println("Brake: " + action.brake);
         System.out.println("-----------------------------------------------");
+        /*
+        double[] wheelSpeeds = sensors.getWheelSpinVelocity();
+        double currSpeed = sensors.getSpeed();
+        for(int i = 0; i < wheelSpeeds.length; i ++) {
+            System.out.println(wheelSpeeds[i]);
+        }
+        System.out.println(currSpeed);
+        */
+        double maxLatSpeed = 0;
+        double latSpeed = sensors.getLateralSpeed();
+        if(latSpeed > maxLatSpeed) {
+            maxLatSpeed = latSpeed;
+        }
+        System.out.println(latSpeed);
+        System.out.println(maxLatSpeed);
         return action;
     }
 }

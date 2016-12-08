@@ -16,14 +16,22 @@ import java.io.IOException;
 public class DefaultDriver extends AbstractDriver {
 
     private NeuralNetwork neuralNetwork;
+    String name = null;
 
-    public DefaultDriver(NeuralNetwork inputNetwork) {
+    public DefaultDriver(NeuralNetwork inputNetwork, String name) {
         initialize();
         this.neuralNetwork = inputNetwork;
         //NeuralNetwork newNetwork = new NeuralNetwork("W1_alldata2.csv", "W2_alldata2.csv", 22, 100, 3);
         //this.neuralNetwork = newNetwork;
         System.out.println(neuralNetwork);
+        this.name = name;
     }
+
+    public NeuralNetwork getNeuralNetwork() {
+        return this.neuralNetwork;
+    }
+
+
 
     private void initialize() {
         this.enableExtras(new AutomatedClutch());
@@ -64,7 +72,11 @@ public class DefaultDriver extends AbstractDriver {
 
     @Override
     public String getDriverName() {
-        return "Euler Forward";
+        if(this.name == null){
+            return "Euler Forward";
+        } else {
+            return this.name;
+        }
     }
 
     @Override
@@ -87,6 +99,7 @@ public class DefaultDriver extends AbstractDriver {
 
     @Override
     public Action defaultControl(Action action, SensorModel sensors) {
+        boolean GEN_DATA = false; //Generate data along the way? Write to klad.csv
         if (action == null) {
             action = new Action();
         }
@@ -120,31 +133,35 @@ public class DefaultDriver extends AbstractDriver {
         if(trackEdgeSensors[17] < 1) {
             action.steering = 0.2;
         }
-
-        System.out.println("--------------" + getDriverName() + "--------------");
-        System.out.println("Steering: " + action.steering);
-        System.out.println("Acceleration: " + action.accelerate);
-        System.out.println("Brake: " + action.brake);
-        System.out.println("-----------------------------------------------");
-
-        String s = "" + action.accelerate + ", " + action.brake + ", " + action.steering + ", " + sensors.getSpeed()
-                + ", " + sensors.getTrackPosition() + ", " + sensors.getAngleToTrackAxis();
-        double[] track_edge_senors = sensors.getTrackEdgeSensors();
-        for(int i = 0; i < track_edge_senors.length; i++) {
-            s += ", " + track_edge_senors[i];
+        boolean PRAATGRAAG = false;
+        if(PRAATGRAAG) {
+            System.out.println("--------------" + getDriverName() + "--------------");
+            System.out.println("Steering: " + action.steering);
+            System.out.println("Acceleration: " + action.accelerate);
+            System.out.println("Brake: " + action.brake);
+            System.out.println("-----------------------------------------------");
         }
-        s += "\n";
-        //System.out.println(s);
-        File outFile = new File("klad.csv");
-        try {
-            outFile.createNewFile();
-            FileWriter fstreamWrite = null;
-            fstreamWrite = new FileWriter("klad.csv", true);
-            BufferedWriter out = new BufferedWriter(fstreamWrite);
-            out.write(s);
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+
+        if(GEN_DATA) {
+            String s = "" + action.accelerate + ", " + action.brake + ", " + action.steering + ", " + sensors.getSpeed()
+                    + ", " + sensors.getTrackPosition() + ", " + sensors.getAngleToTrackAxis();
+            double[] track_edge_senors = sensors.getTrackEdgeSensors();
+            for (int i = 0; i < track_edge_senors.length; i++) {
+                s += ", " + track_edge_senors[i];
+            }
+            s += "\n";
+            //System.out.println(s);
+            File outFile = new File("klad.csv");
+            try {
+                outFile.createNewFile();
+                FileWriter fstreamWrite = null;
+                fstreamWrite = new FileWriter("klad.csv", true);
+                BufferedWriter out = new BufferedWriter(fstreamWrite);
+                out.write(s);
+                out.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         return action;
     }

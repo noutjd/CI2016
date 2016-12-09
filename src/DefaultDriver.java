@@ -17,21 +17,23 @@ public class DefaultDriver extends AbstractDriver {
 
     private NeuralNetwork neuralNetwork;
     String name = null;
+    public double maxDriftAngle = 0;
+    int stuck = 0;
+    private int stuckstill = 0;
 
-    public DefaultDriver(NeuralNetwork inputNetwork, String name) {
+    public DefaultDriver() {
         initialize();
-        this.neuralNetwork = inputNetwork;
-        //NeuralNetwork newNetwork = new NeuralNetwork("W1_alldata2.csv", "W2_alldata2.csv", 22, 100, 3);
-        //this.neuralNetwork = newNetwork;
-        System.out.println(neuralNetwork);
-        this.name = name;
+        this.setNeuralNetwork(new NeuralNetwork("W1_alldata2.csv", "W2_alldata2.csv", 22, 100, 3));
+        this.name = null;
     }
 
     public NeuralNetwork getNeuralNetwork() {
         return this.neuralNetwork;
     }
 
-
+    public void setNeuralNetwork(NeuralNetwork inputNetwork) {
+        this.neuralNetwork = inputNetwork;
+    }
 
     private void initialize() {
         this.enableExtras(new AutomatedClutch());
@@ -72,11 +74,15 @@ public class DefaultDriver extends AbstractDriver {
 
     @Override
     public String getDriverName() {
-        if(this.name == null){
+        if (this.name == null) {
             return "Euler Forward";
         } else {
             return this.name;
         }
+    }
+
+    public void setDriverName(String name) {
+        this.name = name;
     }
 
     @Override
@@ -99,10 +105,11 @@ public class DefaultDriver extends AbstractDriver {
 
     @Override
     public Action defaultControl(Action action, SensorModel sensors) {
-        boolean GEN_DATA = false; //Generate data along the way? Write to klad.csv
         if (action == null) {
             action = new Action();
         }
+        //--------------------------------------------------------------------------------
+        //Get output from the neural network through feedForward
         double[] outputs = new double[3];
         try {
             outputs = neuralNetwork.feedForward(sensors);
@@ -110,29 +117,87 @@ public class DefaultDriver extends AbstractDriver {
             e.printStackTrace();
         }
 
+        //Round off network output: if almost full throttle, go full throttle!
         if(outputs[0] > 0.9 && outputs[1] < 0.1) {
             outputs[0] = 1;
             outputs[1] = 0;
-            //System.out.println("Acceleration correction, full trottle!");
-        }
-
+        }//If braking hard, don't accelerate too!
         if(outputs[0] < 0.1 && outputs[1] > 0.5) {
             outputs[0] = 0;
-            //System.out.println("Braking correction, no throttle here!");
         }
         action.accelerate = outputs[0];
         action.brake = outputs[1];
         action.steering = 2 * outputs[2] - 1;
 
-        action.steering = action.steering + 0.3 * DriversUtils.alignToTrackAxis(sensors, 2);
-
+        //---------------------------------------------------------------------------------
+        //Evade other drivers, go into safe mode if it's slippery
+        double[] opponentSensors = sensors.getOpponentSensors(); //17, 18 and 19 look ahead
         double[] trackEdgeSensors = sensors.getTrackEdgeSensors();
-        if(trackEdgeSensors[1] < 1) {
-            action.steering = -0.2;
+        double lateralSpeed = sensors.getLateralSpeed();
+        double driftAngle = Math.toDegrees(Math.atan2(lateralSpeed, sensors.getSpeed()));
+        if(Math.abs(driftAngle) > this.maxDriftAngle && sensors.getSpeed() > 20) {
+            this.maxDriftAngle = Math.abs(driftAngle);
         }
-        if(trackEdgeSensors[17] < 1) {
-            action.steering = 0.2;
+        //System.out.println(action.accelerate + ", " + driftAngle + ", " + this.maxDriftAngle);
+        if(Math.abs(driftAngle) > 20) {
+            action.accelerate = action.accelerate * 0.5;
+            System.out.println("Correcting! Throttle reduced to " + action.accelerate + ", angle " + driftAngle);
         }
+
+        // Opponent proximity - brake if someone is right up front!
+        if((opponentSensors[17] < 3 || opponentSensors[18] < 10 || opponentSensors[19] < 3) && sensors.getSpeed() > 40) {
+            action.brake = 1;
+        }
+
+        action.steering = action.steering + 0.2 * DriversUtils.alignToTrackAxis(sensors, 0.5);
+
+        //-----------------------------------------------------------------------------
+        // Apply unstucking if stuck. Copied from AutomatedRecovering into here.
+        if(sensors.getSpeed() < 5.0D && sensors.getDistanceFromStartLine() > 0.0D) {
+            this.stuckstill = this.stuckstill + 20;
+        }
+
+        if(Math.abs(sensors.getAngleToTrackAxis()) > 0.5235987901687622D) {
+            if(this.stuck > 0 || Math.abs(sensors.getTrackPosition()) > 0.85D) {
+                this.stuck = this.stuck + 10;
+            }
+        } else if(this.stuck > 0 && Math.abs(sensors.getAngleToTrackAxis()) < 0.3D && sensors.getSpeed() > 10) {
+            this.stuck = Math.max(this.stuck - 1, 0);
+            this.stuckstill = Math.max(this.stuckstill - 1, 0);
+        }
+
+        if(this.stuckstill > 50) {
+            this.stuck = 26;
+        }
+
+        if(trackEdgeSensors[0] != -1 && sensors.getSpeed() > 10 && Math.abs(sensors.getAngleToTrackAxis()) < 0.3D) {
+            this.stuck = 0;
+            this.stuckstill = 0;
+        }
+
+        if(this.stuck > 25) {
+            action.accelerate = 0.7D;
+            action.brake = 0.0D;
+            action.gear = -1;
+            action.steering = -1.0D;
+            if(sensors.getAngleToTrackAxis() < 0.0D) {
+                action.steering = 1.0D;
+            }
+
+            if(sensors.getTrackEdgeSensors()[9] > 3.0D || sensors.getAngleToTrackAxis() * sensors.getTrackPosition() > 0.0D) {
+                action.gear = 1;
+                if(sensors.getSpeed() < -0.2D) {
+                    action.brake = 1.0D;
+                    action.accelerate = 0.0D;
+                }
+            }
+
+            if(sensors.getSpeed() > 0.0D) {
+                action.steering = -action.steering;
+            }
+        }
+        //-------------------------------------------------------------------------------------------
+        //Communicate output to console
         boolean PRAATGRAAG = false;
         if(PRAATGRAAG) {
             System.out.println("--------------" + getDriverName() + "--------------");
@@ -141,7 +206,9 @@ public class DefaultDriver extends AbstractDriver {
             System.out.println("Brake: " + action.brake);
             System.out.println("-----------------------------------------------");
         }
-
+        //-------------------------------------------------------------------------------------------
+        //Save input/output to klad.csv
+        boolean GEN_DATA = false; //Generate data along the way? Write to klad.csv
         if(GEN_DATA) {
             String s = "" + action.accelerate + ", " + action.brake + ", " + action.steering + ", " + sensors.getSpeed()
                     + ", " + sensors.getTrackPosition() + ", " + sensors.getAngleToTrackAxis();

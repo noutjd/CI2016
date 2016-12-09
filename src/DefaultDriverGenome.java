@@ -7,8 +7,8 @@ public class DefaultDriverGenome implements IGenome {
     public DefaultDriver defaultDriver;
     double fitness = 0.0D;
 
-    public DefaultDriverGenome(NeuralNetwork inputNetwork, String name) {
-        this.defaultDriver = new DefaultDriver(inputNetwork, name);
+    public DefaultDriverGenome() {
+        this.defaultDriver = new DefaultDriver();
     }
 }
 
